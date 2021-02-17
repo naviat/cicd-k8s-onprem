@@ -1,0 +1,52 @@
+## Only set these values when deploying.
+CUSTOMERNAME:
+ENV:
+
+## Deployment Platforms
+## qadeploy: use Google Cloud Platform
+qadeploy: no
+openshift: no
+
+## Image
+image:
+  prodrepository: <repo>
+  qarepository: <repo>
+  name: elasticsearch
+
+## Service
+service:
+  port: 80
+  tgtport: 5000
+
+## Environment Variables for Passwords
+## We can have a list under envValues.
+env: no
+envValues:
+  - name:
+    secretName:
+    secretKey:
+
+## Affinity and Antiaffinity
+affinity: no
+affinitypod:
+antiaffinity: no
+antiaffinitypod:
+
+## ConfigMap
+## We can have a list under configmapValues.
+configmap: yes
+configmapvalues:
+#  LOGGER_NAME: json_logger
+#  LOGGER_LEVEL: INFO
+
+## Volumes
+## We can have a list under volumes.
+## Only set hostPath and pvcName when deploying.
+## Possible values for pvcName:
+##   - postgresdisk-pvc
+##   - sftpdisk-pvc
+volume: no
+volumes:
+
+  ## Shared Memory
+shm: no

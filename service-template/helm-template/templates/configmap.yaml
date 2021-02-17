@@ -1,0 +1,21 @@
+{{- if .Values.configmap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  {{- if .Values.uniqueId }}
+  name: {{ .Chart.Name }}-{{ .Values.uniqueId }}-config
+  {{- else }}
+  name: {{ .Chart.Name }}-config
+  {{- end }}
+data:
+  CUSTOMER_NAMESPACE: {{ .Release.Namespace }}
+  CUSTOMER_NAME: {{ .Values.CUSTOMERNAME }}
+  CUSTOMER_ENV: {{ .Values.ENV }}
+  {{- range $key, $val := .Values.configmapvalues }}
+  {{- if regexFind "<uniqueId>" ($val | toString) }}
+  {{ $key }}: {{ regexReplaceAll  "<uniqueId>" $val  $.Values.uniqueId }} 
+  {{- else }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+  {{- end }}
+{{- end }}

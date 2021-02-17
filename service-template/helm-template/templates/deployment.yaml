@@ -1,0 +1,174 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+{{- if .Values.uniqueId }}
+  name: {{ .Values.CUSTOMERNAME }}-{{ .Values.ENV }}-{{ .Chart.Name }}-{{ .Values.uniqueId }}
+{{- else }}
+  name: {{ .Values.CUSTOMERNAME }}-{{ .Values.ENV }}-{{ .Chart.Name }}
+{{- end }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    env: {{ .Values.ENV }}
+    component: {{ .Chart.Name }}
+    version: {{ .Chart.Version }}
+spec:
+  {{- if .Values.replicas }}
+  replicas: {{ .Values.replicas }}
+  {{- else }}
+  replicas: 1
+  {{- end }}
+  selector:
+    matchLabels:
+    {{- if .Values.uniqueId }}
+      app: {{ .Chart.Name }}-{{ .Values.uniqueId }}
+    {{- else }}
+      app: {{ .Chart.Name }}
+    {{- end }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+      {{- if .Values.uniqueId }}
+        app: {{ .Chart.Name }}-{{ .Values.uniqueId }}
+      {{- else }}
+        app: {{ .Chart.Name }}
+      {{- end }}
+    spec:
+      {{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Chart.Name }}
+      {{- end }}
+      {{- if not .Values.openshift }}
+      securityContext:
+        fsGroup: 0
+      {{- end }}
+      {{- if .Values.nodePurpose }}
+      nodeSelector:
+        purpose: {{ .Values.nodePurpose }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 6 }}
+      {{- end }}
+      containers:
+      {{- if .Values.qadeploy }}
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image.qarepository }}/{{ .Values.image.name }}:{{ .Chart.Version }}
+        imagePullPolicy: Always
+      {{- else  if .Values.proddeploy }}
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image.prodrepository }}/{{ .Values.image.name }}:{{ .Chart.Version }}
+        imagePullPolicy: Always
+      {{- else }}
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image.onpremiserepository }}/{{ .Values.image.name }}:{{ .Chart.Version }}
+        imagePullPolicy: Always
+      {{- end }}
+        ports:
+          {{- $ports := kindIs "map" .Values.service | ternary (list .Values.service) (.Values.service) }}
+          {{- range $port := $ports }}
+          - containerPort: {{ $port.tgtport }}
+          {{- end }}
+        {{- if .Values.env  }}
+        env:
+          {{- range $envValue := .Values.envValues }}
+          - name: {{ $envValue.name }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ $envValue.secretName }}
+                key: {{ $envValue.secretKey }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.configmap  }}
+        envFrom:
+          - configMapRef:
+            {{- if .Values.uniqueId }}
+              name: {{ .Chart.Name }}-{{ .Values.uniqueId }}-config
+            {{- else }}
+              name: {{ .Chart.Name }}-config
+            {{- end }}
+        {{- end }}
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "sh"
+                - "-c"
+                - >
+                  if [ -f /root/deploy-user.sh ]; then
+                  sh /root/deploy-user.sh;
+                  fi;
+                  if [ -f /useridscript.sh ]; then
+                  sh /useridscript.sh;
+                  fi;
+        {{- if .Values.resources }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        {{- end }}
+        {{- if .Values.livenessProbe }}
+        livenessProbe:
+{{ toYaml .Values.livenessProbe | indent 10 }}
+        {{- end }}
+        {{- if .Values.readinessProbe }}
+        readinessProbe:
+{{ toYaml .Values.readinessProbe | indent 10 }}
+        {{- end }}
+        {{- if or (.Values.volume) (.Values.shm) }}
+        volumeMounts:
+          {{- range $volume := .Values.volumes }}
+          - mountPath: {{ $volume.mountPath }}
+            name: {{ $volume.name }}
+            {{- if $volume.subPath }}
+            subPath: {{ $volume.subPath }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.shm }}
+          - mountPath: /dev/shm
+            name: dshm
+          {{- end }}
+        {{- end }}
+      {{- if or (.Values.volume) (.Values.shm) }}
+      volumes:
+        {{- range $volume := .Values.volumes }}
+        - name: {{ $volume.name }}
+          {{- if $volume.localPath }}
+          hostPath:
+            path: {{ $volume.localPath }}
+            type: Directory
+          {{- else  if $volume.secretName }}
+          secret:
+            secretName: {{ $volume.secretName }}
+          {{- if $volume.items }}
+            items:
+{{ toYaml $volume.items | indent 12 }}
+          {{- end }}
+          {{- else  if $volume.cmName }}
+          configMap:
+            name: {{ $volume.cmName }}
+          {{- else }}
+          persistentVolumeClaim:
+            claimName: {{ $volume.pvcName }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.shm }}
+        - emptyDir:
+            medium: Memory
+          name: dshm
+        {{- end }}
+      {{- end }}
+      imagePullSecrets:
+        - name: dockerregcred
+        - name: dockerregcred1
+        - name: dockerregcred2
+        - name: dockerregcred3
+        - name: dockerregcred4
+        - name: dockerregcred5
+      

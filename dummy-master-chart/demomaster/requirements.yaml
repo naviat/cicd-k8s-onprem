@@ -1,0 +1,10 @@
+dependencies:
+- name: elasticsearch
+  version: 1.0.0
+  repository: "@example-qa"
+- name: apache
+  version: 1.0.0
+  repository: "@example-qa"
+- name: example-api
+  version: 1.0.0
+  repository: "@example-qa"

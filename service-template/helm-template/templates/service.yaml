@@ -1,0 +1,36 @@
+kind: Service
+apiVersion: v1
+metadata:
+  {{- if .Values.uniqueId }}
+  name: {{ .Chart.Name }}-{{ .Values.uniqueId }}
+  {{- else }}
+  name: {{ .Chart.Name }}
+  {{- end }}
+  labels:
+    env: {{ .Values.ENV }}
+    component: internal-service
+    version: {{ .Chart.Version }}
+spec:
+  type: NodePort
+  ports:
+    {{- $name := .Chart.Name }}
+    {{- $ports := kindIs "map" .Values.service | ternary (list .Values.service) (.Values.service) }}
+    {{- range $idx, $port := $ports }}
+    - port: {{ $port.port }}
+      {{- if $port.protocol }}
+      name: {{ $port.protocol }}-{{ $name }}
+      {{- else }}
+      name: tcp-{{ $name }}-{{ $idx }}
+      {{- end }}
+      {{- if $port.nodePort }}
+      nodePort: {{ $port.nodePort }}
+      {{- end }}
+      protocol: TCP
+      targetPort: {{ $port.tgtport }}
+    {{- end }}
+  selector:
+    {{- if .Values.uniqueId }}
+    app: {{ .Chart.Name }}-{{ .Values.uniqueId }}
+    {{- else }}
+    app: {{ .Chart.Name }}
+    {{- end }}

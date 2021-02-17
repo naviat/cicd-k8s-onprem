@@ -1,0 +1,21 @@
+deployments:
+  - name: elasticsearch
+    environments:
+      - name: pr
+        targets:
+          - name: alpha
+            extra_args: --set configmapvalues.LOGGER_LEVEL=WARNING
+          - name: beta
+            extra_args: --set configmapvalues.LOGGER_LEVEL=WARNING
+      - name: stg
+        targets:
+          - name: alpha
+            extra_args: --set configmapvalues.LOGGER_LEVEL=WARNING
+          - name: example
+            extra_args: --set configmapvalues.LOGGER_LEVEL=WARNING
+notifications:
+  - email: abc@gmail.com , example@gmail.com
+
+
+
+

@@ -1,0 +1,4 @@
+piVersion: v1
+appVersion: 1.0.0
+name: elasticsearch
+version: 4.40.3

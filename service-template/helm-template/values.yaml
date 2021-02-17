@@ -1,0 +1,59 @@
+## Only set these values when deploying.
+CUSTOMERNAME:
+ENV:
+
+## Deployment Platforms
+## qadeploy: use Google Cloud Platform
+qadeploy: no
+openshift: no
+
+## Number of replica
+## If not specified defaults to 1
+#replicas: 1
+
+## Image
+image:
+  prodrepository: <repo>
+  qarepository: <repo>
+  name: your-service
+
+## Service
+service:
+  port: 80
+  tgtport: 
+  protocol: http
+
+## Environment Variables for Passwords
+## We can have a list under envValues.
+env: no
+envValues:
+  - name: 
+    secretName: 
+    secretKey: 
+
+## Affinity and Antiaffinity
+affinity: no
+affinitypod: 
+antiaffinity: no
+antiaffinitypod:
+
+## ConfigMap
+## We can have a list under configmapValues.
+configmap: no
+configmapvalues:
+
+## Volumes
+## We can have a list under volumes.
+## Only set hostPath and pvcName when deploying.
+## Possible values for pvcName:
+##   - postgresdisk-pvc
+##   - sftpdisk-pvc
+volume: no
+volumes:
+  - name:
+    mountPath: 
+    pvcName: 
+
+## Shared Memory
+## Only required by text recognition service
+shm: no
